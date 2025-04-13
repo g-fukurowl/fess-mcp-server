@@ -1,193 +1,122 @@
 # Fess MCP Server
 
-Fess MCP Serverは、Fess検索エンジンと連携するためのミドルウェアサーバーです。
+Fess MCP Server は、 Fess 検索エンジンと連携するためのミドルウェアサーバーです。
+Claude for Desktop などの MCP クライアントの設定に登録することで、エージェントに Fess を用いて情報を得る能力を与えます。Fess は Apache ライセンスで提供されるオープンソースの全文検索サーバーです。商用サポートも提供されています。詳細は公式Webサイトを参照してください。
+https://fess.codelibs.org/ja/
 
-## 機能
 
-- Fess検索エンジンとの連携
-- 検索結果のキャッシュ機能
-- Dockerコンテナ化対応
+# セットアップ
 
-## 必要条件
+## Fess のセットアップ
+Fess サーバ自体のセットアップ手順については Fess の公式ドキュメントを参照してください。
+https://qiita.com/g_fukurowl/items/a00dbbad737d3e775108
 
-- Python 3.8以上
-- Docker
-- Docker Compose
-- uv (オプション、推奨)
+また、下記の記事も参考になるかもしれません。
+https://qiita.com/g_fukurowl/items/a00dbbad737d3e775108
 
-## セットアップ
+## Fess MCP Server のセットアップ
+### Docker を利用する場合
+下記コマンドで起動します。
 
-### uvのインストール（オプション）
-
-uvは高速なPythonパッケージマネージャーです。インストールを推奨します：
-
-```bash
-# Windows (PowerShell)
-irm https://astral.sh/uv/install.ps1 | iex
-```
-
-### プロジェクトのセットアップ
-
-1. リポジトリをクローン:
-```bash
-git clone https://github.com/g-fukurowl/fess-mcp-server.git
-cd fess-mcp-server
-```
-
-2. 依存関係のインストール:
-```bash
-# pipを使用する場合
-pip install -e .
-
-# uvを使用する場合（推奨）
-uv pip install -e .
-```
-
-3. Dockerを使用して起動:
 ```bash
 docker-compose up -d
 ```
 
-## Windowsでのローカル実行
+### Docker を利用しない場合
+ここではuvを使う場合のセットアップ手順を示します。
+uvは高速なPythonパッケージマネージャーです。必須ではありませんが利用をおすすめします。
 
-1. 仮想環境の作成と有効化:
 ```powershell
-# 仮想環境の作成
-python -m venv .venv
+# uvをインストールする
+irm https://astral.sh/uv/install.ps1 | iex
+```
 
-# 仮想環境の有効化
+```powershell
+# 仮想環境を有効化する
 .\.venv\Scripts\activate.bat
 ```
 
-2. 依存関係のインストール:
 ```powershell
-# pipを使用する場合
-pip install -e .
-
-# uvを使用する場合（推奨）
+# 依存ライブラリをインストールする
 uv pip install -e .
 ```
 
-3. サーバーの起動:
 ```powershell
-python fess_mcp_server.py
-
-# uvを使用する場合（推奨）
+# MCPサーバを起動する
 uv run .\fess_mcp_server.py
 ```
 
-4. 環境変数の設定（必要に応じて）:
-```powershell
-$env:PORT=8000
-$env:HOST="0.0.0.0"
-$env:FESS_URL="http://localhost:8080"
-$env:FESS_USERNAME="admin"
-$env:FESS_PASSWORD="admin"
+## 設定
+### Fess サーバとの接続設定
+Fess MCP Server がアクセスする Fess サーバの URL は環境変数 Fess_API_BASE として設定されています。
+Fess MCP Server を起動する前にご使用の環境に合わせてこの変数を書き換えてください。
+Docker コンテナとして起動する場合は docker-compose.yaml を編集し、当該の設定を変更してください。
+
+### Claude for Desktop との接続設定
+Fess MCP Server はデフォルトでポート8000で起動します。
+Fess MCP Server がローカルホスト上でポート8000で動作している場合は、下記のよう claude_desktop_config.json を編集してください。
+```json
+{
+  "mcpServers": {
+    "fess-search-sse": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-remote",
+          "http://localhost:8000/sse"
+        ]
+      }
+  }
+}
 ```
 
 ## テスト
 
-### ローカル環境でのテスト実行
+### Docker を利用しない場合
+ここではuvを使う場合のセットアップ手順を示します。
 
-1. 開発用依存関係のインストール:
 ```powershell
-# pipを使用する場合
-pip install -e ".[test]"
-
-# uvを使用する場合（推奨）
+# 開発用依存関係のインストール:
 uv pip install -e ".[test]"
 ```
 
-2. ユニットテストの実行:
 ```powershell
-# pipを使用する場合
-python -m pytest -v tests/unit/ -s
-
-# uvを使用する場合（推奨）
+# ユニットテストの実行:
 uv run pytest -v tests/unit/ -s
 ```
 
-3. 統合テストの実行:
 ```powershell
-# pipを使用する場合
-python -m pytest -v tests/integration/ -s
-
-# uvを使用する場合（推奨）
+# 統合テストの実行 (Fessサーバと正常に通信可能である必要があります):
 uv run pytest -v tests/integration/ -s
 ```
 
-4. カバレッジレポートの生成:
 ```powershell
-# pipを使用する場合
-python -m pytest --cov=fess_mcp_server --cov-report=html
-
-# uvを使用する場合（推奨）
+# カバレッジレポートの生成:
 uv run pytest --cov=fess_mcp_server --cov-report=html
 ```
 
 ### Dockerコンテナでのテスト実行
 
-1. テスト用のDockerイメージをビルド:
 ```powershell
+# テスト用のDockerイメージをビルド:
 docker build -t fess-mcp-server-test -f Dockerfile.test .
 ```
 
-2. ユニットテストの実行:
 ```powershell
+# ユニットテストの実行:
 docker run --rm fess-mcp-server-test pytest -v tests/unit/ -s
 ```
 
-3. 統合テストの実行（FESSサーバーが必要な場合）:
 ```powershell
+# 統合テストの実行 (Fessサーバと正常に通信可能である必要があります):
 docker run --rm --network host fess-mcp-server-test pytest -v tests/integration/ -s
 ```
 
-4. カバレッジレポートの生成:
 ```powershell
+# カバレッジレポートの生成:
 docker run --rm -v ${PWD}/coverage:/app/coverage fess-mcp-server-test pytest --cov=fess_mcp_server --cov-report=html
 ```
 
-### テストの構成
-
-- `tests/unit/`: ユニットテスト
-  - `test_fess_mcp_server.py`: メインのユニットテスト
-    - FESSサーバー接続テスト
-    - 検索リクエストテスト
-    - 検索結果処理テスト
-  - `test_utils.py`: テスト用ユーティリティ
-
-- `tests/integration/`: 統合テスト
-  - `test_fess_integration.py`: FESSサーバーとの統合テスト
-    - 実際のFESSサーバーとの接続テスト
-    - 実際の検索リクエストテスト
-
-### テストの詳細
-
-#### ユニットテスト
-
-ユニットテストは、以下のテストケースを含みます：
-
-1. FESSサーバー接続テスト
-   - 成功ケース
-   - 失敗ケース
-
-2. 検索リクエストテスト
-   - 成功ケース
-   - エラーケース
-
-3. 検索結果処理テスト
-   - 成功ケース
-   - 結果なしケース
-   - 無効なレスポンスケース
-
-#### 統合テスト
-
-統合テストは、実際のFESSサーバーとの連携をテストします：
-
-1. FESSサーバー接続テスト
-2. 検索リクエストテスト
-
-統合テストを実行するには、FESSサーバーが利用可能である必要があります。
 
 ### テストの実行オプション
 
@@ -196,9 +125,7 @@ docker run --rm -v ${PWD}/coverage:/app/coverage fess-mcp-server-test pytest --c
 - `--cov`: カバレッジレポートを生成
 - `--cov-report=html`: HTML形式のカバレッジレポートを生成
 
-## 使用方法
 
-サーバーはデフォルトでポート8000で起動します。
 
 ## ライセンス
 
