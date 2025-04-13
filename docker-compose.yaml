@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "0.0.0.0:8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - FESS_API_BASE=http://host.docker.internal:8080/api/v1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped 

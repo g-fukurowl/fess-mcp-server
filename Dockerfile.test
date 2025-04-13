@@ -1,0 +1,25 @@
+# ベースイメージとしてPython 3.10を使用
+FROM python:3.10-slim
+
+# 作業ディレクトリを設定
+WORKDIR /app
+
+# 必要なシステムパッケージをインストール
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# 依存関係をコピー
+COPY pyproject.toml .
+
+# 依存関係をインストール（テスト用も含む）
+RUN pip install --verbose -e ".[test]"
+
+# アプリケーションコードをコピー
+COPY . .
+
+# テスト用のディレクトリを作成
+RUN mkdir -p coverage
+
+# テストを実行するコマンド
+CMD ["pytest", "-v", "tests/unit/", "-s"] 
