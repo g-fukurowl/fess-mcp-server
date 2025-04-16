@@ -32,8 +32,7 @@ irm https://astral.sh/uv/install.ps1 | iex
 ```
 
 ```powershell
-# Activate virtual environment
-.\.venv\Scripts\activate.bat
+# uv venv
 ```
 
 ```powershell
