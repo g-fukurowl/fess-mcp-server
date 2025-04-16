@@ -111,10 +111,11 @@ async def get_fess_search_results(query: str) -> str:
     
     for i, result in enumerate(results["data"], 1):
         content = result["content_description"].replace("<strong>", "").replace("</strong>", "")
+        digest = result["digest"].replace("<strong>", "").replace("</strong>", "")
         title = result.get("title", "タイトルなし")
         url_link = result.get("url_link", "URLなし").replace("file//","")
         last_modified = result.get("last_modified", "最終更新日不明")
-        formatted_results.append(f"[{i}] {content}")
+        formatted_results.append(f"[{i}] {content} {digest}")
         references.append(f"[{i}] \"{title}\", {url_link}, {last_modified}")
     
     # 検索結果と参考文献を結合
